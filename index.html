@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SDGs RPG ゆるキャラ本格版</title>
+<style>
+:root{--ink:#3a332b;--paper:#fff9ea;--panel:#fffdf4;--line:#8f765b;--sky:#a9dcf3;--grass:#cfe8a5;--ok:#62b66c;--ng:#e56f65;--gold:#e9b949;--blue:#5ca8d9}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(#a9dcf3 0 34%,#dcebc2 34% 100%);font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif;color:var(--ink)}
+.wrap{max-width:1180px;margin:auto;padding:14px}
+.panel{background:rgba(255,253,244,.97);border:3px solid var(--line);border-radius:22px;box-shadow:0 8px 0 rgba(96,73,48,.18);padding:16px;margin-top:14px}
+.header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap} .logo{font-size:clamp(32px,5vw,56px);font-weight:1000;letter-spacing:.03em}
+.small{font-size:13px;color:#716454} .hidden{display:none!important}
+.chargrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px} .char{border:3px solid var(--line);border-radius:20px;padding:14px;background:#fff8e8;cursor:pointer;text-align:center} .char:hover{transform:translateY(-2px)} .char h3{margin:5px 0} .trait{font-size:13px;line-height:1.5}
+.blob{width:120px;height:120px;margin:auto;display:block}
+.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:8px} .hudbox{background:#fff7df;border:2px solid #b39b7c;border-radius:14px;padding:9px;text-align:center} .hudbox b{display:block;font-size:20px}
+.expbar,.hpbar,.bossbar{height:12px;background:#e5d7bd;border:2px solid #8f765b;border-radius:999px;overflow:hidden} .expbar span{display:block;height:100%;background:#69b5df} .hpbar span{display:block;height:100%;background:#6fc271} .bossbar span{display:block;height:100%;background:#e76f51}
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px} .stage{border:3px solid #8f765b;border-radius:18px;background:#fff7dc;min-height:120px;padding:10px;cursor:pointer;text-align:left;position:relative} .stage:hover{transform:translateY(-2px)} .stage.lock{opacity:.4;cursor:not-allowed;transform:none} .stage.clear{outline:4px solid #8bcf8e} .stage.boss{background:#f2ddf2} .stage.final{background:#e8e0f8} .stage .num{font-size:12px;font-weight:800} .stage .icon{font-size:28px} .stage .name{font-size:12px;font-weight:800;line-height:1.3} .stamp{position:absolute;right:8px;top:6px;font-size:20px}
+.inv{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0} .item{background:#fff0c6;border:2px solid #ad8c5c;border-radius:999px;padding:7px 10px;font-size:12px}
+.battlegrid{display:grid;grid-template-columns:1fr 1.2fr;gap:14px} .scene{background:linear-gradient(#c8e8f5 0 48%,#bfe39b 48%);border:3px solid var(--line);border-radius:20px;padding:14px;min-height:430px;position:relative;overflow:hidden}
+.enemywrap{text-align:center;margin-top:20px} .enemyname{font-size:19px;font-weight:900} .playerwrap{position:absolute;left:18px;bottom:18px;display:flex;align-items:flex-end;gap:10px} .playerwrap .blob{width:96px;height:96px;margin:0}
+.qpanel{border:3px solid var(--line);border-radius:20px;background:#fffdf4;padding:14px} .q{font-size:22px;font-weight:900;line-height:1.5;margin-bottom:12px} .choices{display:grid;gap:9px}
+.choice{border:2px solid #b39b7c;border-radius:12px;background:#fffaf0;padding:12px;text-align:left;font-size:16px;cursor:pointer} .choice:hover{background:#fff1c9} .choice.correct{background:#dff4df;border-color:#62b66c} .choice.wrong{background:#f9dddd;border-color:#e56f65}
+.feedback{display:none;margin-top:10px;padding:12px;border-radius:12px} .feedback.ok{display:block;background:#e5f5e6} .feedback.ng{display:block;background:#f9e2e2}
+.actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:12px} button.main,button.sub{border:3px solid #795f43;border-radius:12px;padding:10px 15px;font-weight:900;cursor:pointer} button.main{background:#8bcf8e} button.sub{background:#f4e4bb}
+.result{text-align:center} .big{font-size:56px;font-weight:1000} .legend{font-size:12px;color:#716454}
+.goalstrip{display:grid;grid-template-columns:repeat(17,1fr);gap:3px;margin-top:12px} .goalmini{color:white;border-radius:6px;padding:5px 2px;text-align:center;font-size:10px;min-height:52px} .goalmini b{display:block;font-size:13px}
+@media(max-width:760px){.hud{grid-template-columns:repeat(2,1fr)}.battlegrid{grid-template-columns:1fr}.scene{min-height:330px}.goalstrip{grid-template-columns:repeat(6,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="header">
+  <div><div class="logo">🌱 SDGs RPG</div><div class="small">未来をつなぐ、ゆるっと冒険！</div></div>
+  <div class="small">データはこのブラウザ内に自動保存されます</div>
+</div>
+
+<section id="select" class="panel">
+<h2>キャラクターをえらぼう！</h2>
+<div class="chargrid">
+  <button class="char" onclick="choose('fire')"><div id="char-fire"></div><h3>🔥 炎のゆうしゃ</h3><div class="trait">ボス戦開始時 EXP +50</div></button>
+  <button class="char" onclick="choose('water')"><div id="char-water"></div><h3>💧 水のまほうつかい</h3><div class="trait">HP上限 +1</div></button>
+  <button class="char" onclick="choose('forest')"><div id="char-forest"></div><h3>🌿 森のまもりびと</h3><div class="trait">装備獲得時 EXP +50</div></button>
+</div>
+</section>
+
+<section id="map" class="panel hidden">
+<div class="hud">
+ <div class="hudbox">冒険者<b id="heroName">-</b></div>
+ <div class="hudbox">LEVEL<b id="lv">1</b></div>
+ <div class="hudbox">EXP<b id="xp">0</b></div>
+ <div class="hudbox">HP<b id="hp">3/3</b></div>
+ <div class="hudbox">CLEAR<b id="clear">0/17</b></div>
+</div>
+<div class="expbar"><span id="xpbar"></span></div>
+<div id="inv" class="inv"></div>
+<h3>ワールドマップ</h3>
+<div id="mapgrid" class="mapgrid"></div>
+<div class="actions"><span class="small">GOAL4・8・12・16のあとに中ボス、GOAL17のあとにラスボス。</span><button class="sub" onclick="resetGame()">最初から</button></div>
+<div id="goalstrip" class="goalstrip"></div>
+</section>
+
+<section id="battle" class="panel hidden">
+<div class="battlegrid">
+ <div class="scene">
+   <div class="enemywrap">
+     <div class="enemyname" id="enemyName"></div>
+     <div class="bossbar hidden" id="bossBarWrap"><span id="bossBar"></span></div>
+     <div id="enemySvg"></div>
+   </div>
+   <div class="playerwrap"><div id="playerSvg"></div><div><b id="playerName"></b><div class="hpbar" style="width:150px"><span id="hpbar"></span></div><div class="small" id="battleHp"></div></div></div>
+ </div>
+ <div class="qpanel">
+   <div class="small" id="label"></div>
+   <div class="small" id="progressText"></div>
+   <div class="q" id="question"></div>
+   <div class="choices" id="choices"></div>
+   <div id="feedback" class="feedback"></div>
+   <div class="actions">
+      <button class="sub" onclick="backMap()">マップへ戻る</button>
+      <button id="hintBtn" class="sub hidden" onclick="useHint()">📘 2択ヒント</button>
+      <button id="shieldBtn" class="sub hidden" onclick="useShield()">🛡️ シールド</button>
+      <button id="nextBtn" class="main hidden" onclick="nextBattle()">次へ</button>
+   </div>
+ </div>
+</div>
+</section>
+
+<section id="ending" class="panel hidden result">
+<div style="font-size:72px">🏆</div><h1>世界の未来を守った！</h1>
+<div class="big" id="finalLevel"></div><p id="summary"></p>
+<p>一番気になったSDGs目標を1つ選んで、「なぜ気になったか」を友達と話してみよう。</p>
+<button class="main" onclick="resetGame()">もう一度プレイ</button>
+</section>
+</div>
+<script>
+const Q=[{"goal": 1, "q": "目標1「貧困をなくそう」が目指すこととして最も近いものは？", "choices": ["誰もが必要な生活を送れる社会にする", "世界中の税金を同じにする", "全員の収入を同じにする", "現金をなくす"], "a": 0, "exp": "貧困は収入だけでなく、住まい・教育・医療など生活全体に関わります。", "difficulty": 1}, {"goal": 1, "q": "「相対的貧困」とは？", "choices": ["社会の中で標準的な生活を送ることが難しい状態", "砂漠で暮らすこと", "外国に行けないこと", "現金を持っていないこと"], "a": 0, "exp": "その社会の一般的な生活水準と比べて、必要な生活が難しい状態を指します。", "difficulty": 2}, {"goal": 1, "q": "貧困の連鎖を断つ方法として特に重要なのは？", "choices": ["教育や就労の機会を広げる", "食品を大量に廃棄する", "公共サービスを減らす", "災害支援をやめる"], "a": 0, "exp": "教育と仕事の機会は、長期的な貧困対策の重要な柱です。", "difficulty": 3}, {"goal": 2, "q": "目標2「飢餓をゼロに」に含まれる考えは？", "choices": ["安全で栄養ある食料を誰もが得られること", "世界中で同じ料理を食べること", "肉を禁止すること", "農業をなくすこと"], "a": 0, "exp": "飢餓、栄養不足、持続可能な農業が中心テーマです。", "difficulty": 1}, {"goal": 2, "q": "食品ロスを減らす行動は？", "choices": ["食べ切れる量を選ぶ", "期限が近い食品を必ず捨てる", "料理を多く作りすぎる", "食べ残しを増やす"], "a": 0, "exp": "食べ切れる量を選ぶことは身近な食品ロス対策です。", "difficulty": 2}, {"goal": 2, "q": "持続可能な農業に近いのは？", "choices": ["土や水を守りながら生産する", "毎年土地を使い捨てる", "農薬を無制限に使う", "農地をすべて住宅にする"], "a": 0, "exp": "将来も農業を続けられるように土・水・生態系を守ることが重要です。", "difficulty": 3}, {"goal": 3, "q": "目標3に最も関係するのは？", "choices": ["予防接種や医療を受けられる環境", "病院を減らすこと", "睡眠時間を削ること", "感染症情報を隠すこと"], "a": 0, "exp": "病気の予防、医療へのアクセス、心身の健康が目標3に含まれます。", "difficulty": 1}, {"goal": 3, "q": "健康を守る基本として適切なのは？", "choices": ["睡眠・運動・バランスのよい食事", "毎日徹夜", "水分を取らない", "朝食を必ず抜く"], "a": 0, "exp": "生活習慣を整えることは健康維持の基本です。", "difficulty": 2}, {"goal": 3, "q": "『福祉』に最も近い考えは？", "choices": ["誰もが安心して生活できるよう支えること", "競争に負けた人を放置すること", "高齢者だけを支えること", "病気の人を社会から遠ざけること"], "a": 0, "exp": "福祉は年齢や状況にかかわらず、安心して暮らすための支援を含みます。", "difficulty": 3}, {"goal": 4, "q": "目標4が目指すものは？", "choices": ["誰もが質の高い教育を受けられること", "テストをなくすこと", "世界中で同じ教科書を使うこと", "学校を減らすこと"], "a": 0, "exp": "教育の機会と質の両方が大切です。", "difficulty": 1}, {"goal": 4, "q": "教育格差を小さくする取り組みは？", "choices": ["学習機会や教材へのアクセスを広げる", "授業料を大幅に上げる", "学校数を減らす", "一部の人だけに端末を配る"], "a": 0, "exp": "家庭の経済状況や地域に左右されず学べる環境が重要です。", "difficulty": 2}, {"goal": 4, "q": "生涯学習とは？", "choices": ["年齢に関係なく学び続けること", "学校にいる間だけ学ぶこと", "大人は学ばないこと", "試験のためだけに学ぶこと"], "a": 0, "exp": "学校卒業後も学び続ける機会を持つことが生涯学習です。", "difficulty": 3}, {"goal": 5, "q": "ジェンダー平等に最も近い考えは？", "choices": ["性別に関係なく機会や権利が保障されること", "男女で同じ服を着ること", "人数を必ず同じにすること", "役割を性別で固定すること"], "a": 0, "exp": "大切なのは性別によって可能性や権利が制限されないことです。", "difficulty": 1}, {"goal": 5, "q": "『男だから』『女だから』と役割を決めつける考え方は？", "choices": ["固定的な性別役割", "多様性の尊重", "合理的配慮", "環境保全"], "a": 0, "exp": "性別で役割を決めつけないことがジェンダー平等につながります。", "difficulty": 2}, {"goal": 5, "q": "学校でできるジェンダー平等の行動は？", "choices": ["性別に関係なく役割に挑戦できるようにする", "力仕事は必ず男子にする", "委員長は男子だけにする", "女子は発表させない"], "a": 0, "exp": "本人の希望や得意を大切にして役割を決めることが重要です。", "difficulty": 3}, {"goal": 6, "q": "目標6の大きなテーマは？", "choices": ["安全な水と衛生", "宇宙開発", "スポーツ", "インターネット"], "a": 0, "exp": "安全な飲み水、トイレ、衛生、水資源の管理などがテーマです。", "difficulty": 1}, {"goal": 6, "q": "節水につながる行動は？", "choices": ["歯みがき中は水を止める", "水道を一日中流す", "少量でも毎回洗濯機を回す", "水漏れを放置する"], "a": 0, "exp": "身近な節水行動も水資源を守ることにつながります。", "difficulty": 2}, {"goal": 6, "q": "安全なトイレがないことで起こりやすい問題は？", "choices": ["感染症が広がりやすくなる", "空気がきれいになる", "水が増える", "電気代が下がる"], "a": 0, "exp": "衛生設備が不十分だと感染症のリスクが高まります。", "difficulty": 3}, {"goal": 7, "q": "再生可能エネルギーはどれ？", "choices": ["太陽光発電", "石炭火力発電", "ガソリン", "軽油"], "a": 0, "exp": "太陽光・風力・水力などは再生可能エネルギーです。", "difficulty": 1}, {"goal": 7, "q": "省エネ行動として適切なのは？", "choices": ["使っていない照明を消す", "冷房中も窓を開けっぱなしにする", "無人の教室で照明をつける", "充電後も長時間つなぐ"], "a": 0, "exp": "無駄な電力使用を減らすことが省エネにつながります。", "difficulty": 2}, {"goal": 7, "q": "クリーンエネルギーを増やす理由の一つは？", "choices": ["温室効果ガスを減らすため", "電気を使えなくするため", "夜を暗くするため", "車をすべて禁止するため"], "a": 0, "exp": "化石燃料への依存を減らし、温室効果ガス削減につなげます。", "difficulty": 3}, {"goal": 8, "q": "目標8で大切にされるのは？", "choices": ["安全で働きがいのある仕事", "長時間労働を増やすこと", "子どもを働かせること", "休みをなくすこと"], "a": 0, "exp": "働く人の権利や安全、適正な雇用、持続可能な経済成長が重要です。", "difficulty": 1}, {"goal": 8, "q": "児童労働とは？", "choices": ["子どもの教育や健康を妨げるような労働", "家の手伝いを少しすること", "係活動をすること", "部活動をすること"], "a": 0, "exp": "教育や健康を害する労働は大きな問題です。", "difficulty": 2}, {"goal": 8, "q": "働きがいのある職場に近いのは？", "choices": ["安全で適正な労働時間が守られる", "休憩なしで働く", "給料が支払われない", "差別がある"], "a": 0, "exp": "安全、公正、適正な待遇などが働きがいにつながります。", "difficulty": 3}, {"goal": 9, "q": "目標9に関係するものは？", "choices": ["技術革新とインフラ整備", "絶滅危惧種の保護だけ", "海洋ごみだけ", "ジェンダーだけ"], "a": 0, "exp": "産業、インフラ、イノベーションが中心テーマです。", "difficulty": 1}, {"goal": 9, "q": "インフラの例は？", "choices": ["道路・鉄道・通信網", "教科書の表紙", "スポーツのルール", "制服の色"], "a": 0, "exp": "社会や経済の基盤となる設備や仕組みをインフラと呼びます。", "difficulty": 2}, {"goal": 9, "q": "技術革新がSDGsに役立つ例は？", "choices": ["省エネ技術で電力消費を減らす", "使い捨て製品を増やすだけ", "資源を無制限に使う", "修理できない製品だけ作る"], "a": 0, "exp": "新しい技術は環境負荷や社会課題を減らす手段になり得ます。", "difficulty": 3}, {"goal": 10, "q": "目標10が目指すものは？", "choices": ["人や国の間の不平等を小さくする", "全員の性格を同じにする", "全ての文化を同じにする", "全ての家を同じ形にする"], "a": 0, "exp": "収入、機会、社会参加などの不平等を減らすことがテーマです。", "difficulty": 1}, {"goal": 10, "q": "不平等を小さくする行動は？", "choices": ["障害のある人も参加しやすい環境を整える", "一部の人だけ情報を得られるようにする", "外国人を排除する", "困っている人を無視する"], "a": 0, "exp": "誰もが参加できる環境整備が重要です。", "difficulty": 2}, {"goal": 10, "q": "『合理的配慮』に近いものは？", "choices": ["必要に応じて参加しやすい工夫をする", "全員に全く同じ対応だけをする", "助けを求めても断る", "段差を増やす"], "a": 0, "exp": "個々の必要に応じた工夫によって公平な参加を支えます。", "difficulty": 3}, {"goal": 11, "q": "災害に強いまちづくりに関係するのは？", "choices": ["避難場所や防災計画を整える", "避難経路をなくす", "危険情報を出さない", "災害訓練をやめる"], "a": 0, "exp": "防災・減災は持続可能なまちづくりの重要な要素です。", "difficulty": 1}, {"goal": 11, "q": "住み続けやすいまちの特徴は？", "choices": ["公共交通や公園が利用しやすい", "ごみが放置されている", "危険な道路しかない", "高齢者が外出できない"], "a": 0, "exp": "安全性、交通、公共空間、災害対策などが重要です。", "difficulty": 2}, {"goal": 11, "q": "地域の文化財を守ることは目標11と関係がある？", "choices": ["ある", "ない", "海外だけ関係する", "博物館だけ関係する"], "a": 0, "exp": "地域の文化・自然遺産を守ることも目標11に含まれます。", "difficulty": 3}, {"goal": 12, "q": "3Rに含まれないものは？", "choices": ["Replace", "Reduce", "Reuse", "Recycle"], "a": 0, "exp": "代表的な3RはReduce・Reuse・Recycleです。", "difficulty": 1}, {"goal": 12, "q": "『つかう責任』に近い行動は？", "choices": ["必要な物を必要な量だけ買う", "まだ使える物をすぐ捨てる", "食品を大量に残す", "使い捨てを増やす"], "a": 0, "exp": "消費者側の選択も持続可能な生産と消費に影響します。", "difficulty": 2}, {"goal": 12, "q": "製品を長く使うためにできることは？", "choices": ["修理して使う", "少し古くなったら必ず捨てる", "毎月買い替える", "部品交換を禁止する"], "a": 0, "exp": "修理・再利用は資源消費や廃棄物の削減につながります。", "difficulty": 3}, {"goal": 13, "q": "気候変動と関係が深い気体は？", "choices": ["二酸化炭素", "酸素", "窒素", "ヘリウム"], "a": 0, "exp": "二酸化炭素などの温室効果ガス増加が地球温暖化に影響します。", "difficulty": 1}, {"goal": 13, "q": "気候変動対策につながる行動は？", "choices": ["公共交通や自転車を活用する", "電気を無駄に使う", "森林を減らす", "使い捨てを増やす"], "a": 0, "exp": "移動やエネルギー利用を見直すことで排出削減につながります。", "difficulty": 2}, {"goal": 13, "q": "『適応策』とは？", "choices": ["気候変動の影響に備えること", "気候変動を無視すること", "気温を測らないこと", "災害情報を隠すこと"], "a": 0, "exp": "防災や暑さ対策など、すでに起きる影響に備えることを適応といいます。", "difficulty": 3}, {"goal": 14, "q": "海洋プラスチックごみを減らす行動は？", "choices": ["使い捨てプラスチックを減らす", "海にごみを流す", "分別をやめる", "ペットボトルを毎回捨てる"], "a": 0, "exp": "プラスチックの使用削減や適切な分別が重要です。", "difficulty": 1}, {"goal": 14, "q": "海の生態系を守るために大切なのは？", "choices": ["乱獲を防ぐ", "小さな魚も全て取る", "サンゴ礁を壊す", "海に油を流す"], "a": 0, "exp": "漁業資源を持続可能に利用することが必要です。", "difficulty": 2}, {"goal": 14, "q": "川に捨てられたごみは海と関係がある？", "choices": ["ある", "ない", "山だけに残る", "空に消える"], "a": 0, "exp": "川を通じてごみが海へ流れ込むことがあります。", "difficulty": 3}, {"goal": 15, "q": "目標15に関係するものは？", "choices": ["森林や生物多様性を守る", "海だけを守る", "宇宙ごみを減らす", "交通渋滞だけを減らす"], "a": 0, "exp": "森林、土壌、生物多様性、砂漠化などがテーマです。", "difficulty": 1}, {"goal": 15, "q": "生物多様性とは？", "choices": ["さまざまな生き物が関わり合って生きていること", "一種類の生物だけがいること", "動物園の動物数", "ペットの種類"], "a": 0, "exp": "生き物の種類だけでなく、遺伝子や生態系の多様性も含みます。", "difficulty": 2}, {"goal": 15, "q": "森林を守る行動に近いのは？", "choices": ["認証された木材製品を選ぶ", "違法伐採を増やす", "森を燃やす", "外来種を無計画に放す"], "a": 0, "exp": "持続可能な森林利用につながる製品選択も一つの方法です。", "difficulty": 3}, {"goal": 16, "q": "目標16に最も近いものは？", "choices": ["平和で公正な社会をつくる", "軍事力だけを増やす", "法律をなくす", "情報を隠す"], "a": 0, "exp": "暴力を減らし、公正な制度や司法へのアクセスを整えることがテーマです。", "difficulty": 1}, {"goal": 16, "q": "いじめや暴力を減らすことは目標16と関係がある？", "choices": ["ある", "ない", "学校では関係ない", "大人だけ関係する"], "a": 0, "exp": "暴力を減らし、安全に生活できる環境づくりは身近な目標16です。", "difficulty": 2}, {"goal": 16, "q": "公正な社会に必要なのは？", "choices": ["ルールが公平に適用されること", "強い人だけ特別扱いすること", "意見を言えなくすること", "情報公開をやめること"], "a": 0, "exp": "公平な制度や透明性が社会への信頼につながります。", "difficulty": 3}, {"goal": 17, "q": "目標17のキーワードは？", "choices": ["協力・パートナーシップ", "競争だけ", "個人だけで解決", "情報を共有しない"], "a": 0, "exp": "SDGsは国・企業・学校・地域・市民などの協力で進めます。", "difficulty": 1}, {"goal": 17, "q": "地域のSDGs課題を解決する方法として良いのは？", "choices": ["学校・地域・企業などが協力する", "学校だけで秘密に進める", "一人で全部解決する", "他の意見を聞かない"], "a": 0, "exp": "異なる立場の人が協力すると解決策が広がります。", "difficulty": 2}, {"goal": 17, "q": "SDGsの17目標の関係として正しいのは？", "choices": ["互いに関係している", "完全に別々で関係ない", "1つだけ達成すればよい", "17番だけが最重要"], "a": 0, "exp": "エネルギー、気候、貧困、教育など複数の目標は互いに影響し合います。", "difficulty": 3}];
+const N={"1": "貧困をなくそう", "2": "飢餓をゼロに", "3": "すべての人に健康と福祉を", "4": "質の高い教育をみんなに", "5": "ジェンダー平等を実現しよう", "6": "安全な水とトイレを世界中に", "7": "エネルギーをみんなに そしてクリーンに", "8": "働きがいも経済成長も", "9": "産業と技術革新の基盤をつくろう", "10": "人や国の不平等をなくそう", "11": "住み続けられるまちづくりを", "12": "つくる責任 つかう責任", "13": "気候変動に具体的な対策を", "14": "海の豊かさを守ろう", "15": "陸の豊かさも守ろう", "16": "平和と公正をすべての人に", "17": "パートナーシップで目標を達成しよう"};
+const C={"1": "#e64b35", "2": "#dda63a", "3": "#4c9f38", "4": "#c5192d", "5": "#ff3a21", "6": "#26bde2", "7": "#fcc30b", "8": "#a21942", "9": "#fd6925", "10": "#dd1367", "11": "#fd9d24", "12": "#bf8b2e", "13": "#3f7e44", "14": "#0a97d9", "15": "#56c02b", "16": "#00689d", "17": "#19486a"};
+const GI={"1": "🌍", "2": "🍚", "3": "❤️", "4": "📚", "5": "⚖️", "6": "💧", "7": "☀️", "8": "💼", "9": "🏗️", "10": "🤝", "11": "🏙️", "12": "♻️", "13": "🌡️", "14": "🌊", "15": "🌳", "16": "🕊️", "17": "🌐"};
+const CH={fire:{name:'炎のゆうしゃ',color:'#f06b52',maxhp:3},water:{name:'水のまほうつかい',color:'#6bbfe8',maxhp:4},forest:{name:'森のまもりびと',color:'#9bc35c',maxhp:3}};
+const EQ=[
+{id:'shield',name:'🛡️ エコのたて',effect:'不正解ダメージを1回無効'},
+{id:'book',name:'📘 ちえのほん',effect:'選択肢を2つにできる'},
+{id:'boots',name:'🥾 みらいのブーツ',effect:'中ボス撃破EXP +50'},
+{id:'crystal',name:'💎 パートナークリスタル',effect:'ラスボス開始HP +1'}
+];
+let s=JSON.parse(localStorage.getItem('sdgsCuteRPG')||'null')||{char:null,xp:0,cleared:[],bosses:[],items:[],hp:3,attempts:0,correct:0};
+let mode='stage',curGoal=null,curQ=null,answered=false,bossKey=null,bossTotal=0,bossIndex=0,bossCorrect=0,bossHP=0,shieldArmed=false,hintUsed=false;
+
+function blobSVG(color,face='happy',accessory='none',monster=false,big=false){
+ const eye=face==='angry'?"<path d='M42 48 l10 4 M78 48 l-10 4' stroke='#3a332b' stroke-width='4' stroke-linecap='round'/>":"<circle cx='48' cy='50' r='4' fill='#3a332b'/><circle cx='72' cy='50' r='4' fill='#3a332b'/>";
+ const mouth=face==='angry'?"<path d='M50 68 Q60 60 70 68' fill='none' stroke='#3a332b' stroke-width='4' stroke-linecap='round'/>":"<path d='M52 66 Q60 73 68 66' fill='none' stroke='#3a332b' stroke-width='4' stroke-linecap='round'/>";
+ const acc=accessory==='leaf'?"<path d='M62 20 Q80 2 91 18 Q74 27 62 20' fill='#67a84a' stroke='#3a332b' stroke-width='3'/>":accessory==='flame'?"<path d='M58 25 Q48 12 58 4 Q63 15 72 18 Q68 28 58 25' fill='#f39b3c' stroke='#3a332b' stroke-width='3'/>":accessory==='drop'?"<path d='M61 3 C52 18 48 23 48 31 a13 13 0 0 0 26 0 c0-8-5-13-13-28z' fill='#78c8ef' stroke='#3a332b' stroke-width='3'/>":"";
+ const spikes=monster?"<path d='M30 38 l-12 -8 l6 16 M90 38 l12 -8 l-6 16' fill='"+color+"' stroke='#3a332b' stroke-width='3'/>":"";
+ return `<svg class="blob" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">${acc}${spikes}<path d="M60 20 C38 20 22 40 24 66 C26 92 43 103 60 103 C79 103 96 91 97 67 C99 43 82 21 60 20Z" fill="${color}" stroke="#3a332b" stroke-width="4"/>${eye}${mouth}<ellipse cx="42" cy="59" rx="5" ry="3" fill="#f4a7a7" opacity=".55"/><ellipse cx="78" cy="59" rx="5" ry="3" fill="#f4a7a7" opacity=".55"/></svg>`;
+}
+function renderChars(){
+ document.getElementById('char-fire').innerHTML=blobSVG(CH.fire.color,'happy','flame');
+ document.getElementById('char-water').innerHTML=blobSVG(CH.water.color,'happy','drop');
+ document.getElementById('char-forest').innerHTML=blobSVG(CH.forest.color,'happy','leaf');
+}
+function level(){return Math.floor(s.xp/350)+1}
+function maxhp(){return CH[s.char].maxhp}
+function save(){localStorage.setItem('sdgsCuteRPG',JSON.stringify(s))}
+function choose(c){s={char:c,xp:0,cleared:[],bosses:[],items:[],hp:CH[c].maxhp,attempts:0,correct:0};save();document.getElementById('select').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap();}
+function hud(){
+ document.getElementById('heroName').textContent=CH[s.char].name;document.getElementById('lv').textContent=level();document.getElementById('xp').textContent=s.xp;document.getElementById('hp').textContent=s.hp+'/'+maxhp();document.getElementById('clear').textContent=s.cleared.length+'/17';document.getElementById('xpbar').style.width=((s.xp%350)/3.5)+'%';
+ document.getElementById('inv').innerHTML=s.items.length?s.items.map(id=>{const e=EQ.find(x=>x.id===id);return `<span class="item" title="${e.effect}">${e.name}</span>`}).join(''):'<span class="small">装備：まだなし</span>';
+}
+function bossReq(k){return {b1:4,b2:8,b3:12,b4:16,final:17}[k]}
+function bossUnlocked(k){
+ if(s.cleared.length<bossReq(k))return false;
+ if(k==='final')return ['b1','b2','b3','b4'].every(x=>s.bosses.includes(x));
+ const prev={b2:'b1',b3:'b2',b4:'b3'}[k];return !prev||s.bosses.includes(prev);
+}
+function renderMap(){
+ hud(); const g=document.getElementById('mapgrid');g.innerHTML='';
+ for(let i=1;i<=17;i++){const locked=i>1&&!s.cleared.includes(i-1);const b=document.createElement('button');b.className='stage '+(locked?'lock ':'')+(s.cleared.includes(i)?'clear ':'');b.style.borderColor=C[i];b.innerHTML=`<div class="num">GOAL ${i}</div><div class="icon">${GI[i]}</div><div class="name">${N[i]}</div>${s.cleared.includes(i)?'<span class="stamp">✅</span>':''}`;if(!locked)b.onclick=()=>startStage(i);g.appendChild(b);
+ if([4,8,12,16].includes(i)){const k='b'+([4,8,12,16].indexOf(i)+1),un=bossUnlocked(k),done=s.bosses.includes(k);const bb=document.createElement('button');bb.className='stage boss '+(!un?'lock ':'')+(done?'clear ':'');bb.innerHTML=`<div class="num">BOSS</div><div class="icon">👾</div><div class="name">中ボス ${k.slice(1)}（3問）</div>${done?'<span class="stamp">✅</span>':''}`;if(un&&!done)bb.onclick=()=>startBoss(k,3);g.appendChild(bb);}}
+ const f=document.createElement('button'),un=bossUnlocked('final'),done=s.bosses.includes('final');f.className='stage final '+(!un?'lock ':'')+(done?'clear ':'');f.innerHTML=`<div class="num">FINAL</div><div class="icon">☁️</div><div class="name">カオス・オブ・SDGs（5問）</div>${done?'<span class="stamp">✅</span>':''}`;if(un&&!done)f.onclick=()=>startBoss('final',5);g.appendChild(f);
+ const strip=document.getElementById('goalstrip');strip.innerHTML='';for(let i=1;i<=17;i++){strip.innerHTML+=`<div class="goalmini" style="background:${C[i]}"><b>${i}</b>${GI[i]}<br>${s.cleared.includes(i)?'CLEAR!':''}</div>`}
+}
+function pickQuestion(goal=null,minD=1){
+ let pool=Q.filter(x=>(goal?x.goal===goal:true)&&x.difficulty>=minD);if(!pool.length)pool=Q.filter(x=>goal?x.goal===goal:true);return JSON.parse(JSON.stringify(pool[Math.floor(Math.random()*pool.length)]));
+}
+function shuffleQuestion(q){
+ const arr=q.choices.map((text,i)=>({text,correct:i===q.a}));
+ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+ q.choices=arr.map(x=>x.text);q.a=arr.findIndex(x=>x.correct);return q;
+}
+function startStage(g){mode='stage';curGoal=g;answered=false;s.hp=maxhp();shieldArmed=false;hintUsed=false;curQ=shuffleQuestion(pickQuestion(g,1));save();openBattle('GOAL '+g,N[g],false,'');}
+function startBoss(k,total){mode='boss';bossKey=k;bossTotal=total;bossIndex=0;bossCorrect=0;bossHP=total;shieldArmed=false;hintUsed=false;s.hp=maxhp()+(k==='final'&&s.items.includes('crystal')?1:0);if(s.char==='fire')s.xp+=50;save();nextBossQuestion();}
+function nextBossQuestion(){bossIndex++;answered=false;hintUsed=false;curQ=shuffleQuestion(pickQuestion(null,bossKey==='final'?2:1));openBattle(bossKey==='final'?'FINAL BOSS':'BOSS BATTLE',bossKey==='final'?'カオス・オブ・SDGs':'ゆるモンスター '+bossKey.slice(1),true,`${bossIndex} / ${bossTotal} 問`);}
+function openBattle(label,name,isBoss,prog){
+ document.getElementById('map').classList.add('hidden');document.getElementById('battle').classList.remove('hidden');document.getElementById('ending').classList.add('hidden');
+ document.getElementById('label').textContent=label;document.getElementById('progressText').textContent=prog;document.getElementById('question').textContent=curQ.q;document.getElementById('enemyName').textContent=name;document.getElementById('playerName').textContent=CH[s.char].name;document.getElementById('battleHp').textContent='HP '+s.hp+' / '+maxhp();document.getElementById('hpbar').style.width=(Math.min(1,s.hp/maxhp())*100)+'%';
+ document.getElementById('playerSvg').innerHTML=blobSVG(CH[s.char].color,'happy',s.char==='fire'?'flame':s.char==='water'?'drop':'leaf');
+ let enemyColor=isBoss?(bossKey==='final'?'#5b526d':'#b58ac7'):C[curGoal]||'#ef9a9a';document.getElementById('enemySvg').innerHTML=blobSVG(enemyColor,isBoss?'angry':'happy','none',true);
+ document.getElementById('bossBarWrap').classList.toggle('hidden',!isBoss);if(isBoss)document.getElementById('bossBar').style.width=(bossHP/bossTotal*100)+'%';
+ document.getElementById('feedback').className='feedback';document.getElementById('feedback').textContent='';document.getElementById('nextBtn').classList.add('hidden');document.getElementById('hintBtn').classList.toggle('hidden',!s.items.includes('book')||hintUsed);document.getElementById('shieldBtn').classList.toggle('hidden',!s.items.includes('shield')||shieldArmed);
+ const c=document.getElementById('choices');c.innerHTML='';curQ.choices.forEach((x,i)=>{const b=document.createElement('button');b.className='choice';b.textContent=String.fromCharCode(65+i)+'　'+x;b.onclick=()=>answer(i,b);c.appendChild(b);});
+}
+function useHint(){if(hintUsed||answered)return;hintUsed=true;const wrong=[0,1,2,3].filter(i=>i!==curQ.a).sort(()=>Math.random()-.5);wrong.slice(0,2).forEach(i=>{const b=document.querySelectorAll('.choice')[i];b.disabled=true;b.style.opacity=.35});document.getElementById('hintBtn').classList.add('hidden');}
+function useShield(){if(shieldArmed||answered)return;shieldArmed=true;document.getElementById('shieldBtn').classList.add('hidden');alert('エコのたてを構えた！ 次の不正解ダメージを1回無効にします。');}
+function answer(i,b){if(answered)return;answered=true;s.attempts++;const all=[...document.querySelectorAll('.choice')],fb=document.getElementById('feedback');all[curQ.a].classList.add('correct');
+ if(i===curQ.a){s.correct++;s.xp+=100;if(mode==='boss'){bossCorrect++;bossHP=Math.max(0,bossHP-1);}fb.className='feedback ok';fb.innerHTML='<b>正解！ EXP +100</b><br>'+curQ.exp;}
+ else{b.classList.add('wrong');if(shieldArmed){shieldArmed=false;fb.className='feedback ng';fb.innerHTML='<b>🛡️ シールド発動！ ダメージなし</b><br>正解：'+curQ.choices[curQ.a]+'<br>'+curQ.exp;}else{s.hp=Math.max(0,s.hp-1);fb.className='feedback ng';fb.innerHTML='<b>おしい！ HP -1</b><br>正解：'+curQ.choices[curQ.a]+'<br>'+curQ.exp;}}
+ save();document.getElementById('battleHp').textContent='HP '+s.hp+' / '+maxhp();document.getElementById('hpbar').style.width=(Math.min(1,s.hp/maxhp())*100)+'%';document.getElementById('nextBtn').classList.remove('hidden');}
+function nextBattle(){
+ if(mode==='stage'){if(!s.cleared.includes(curGoal))s.cleared.push(curGoal);const thresholds=[3,7,11,15],idx=thresholds.indexOf(s.cleared.length);if(idx>=0&&!s.items.includes(EQ[idx].id)){s.items.push(EQ[idx].id);if(s.char==='forest')s.xp+=50;alert('装備ゲット！ '+EQ[idx].name+'\n'+EQ[idx].effect);}save();backMap();}
+ else{if(bossIndex<bossTotal)nextBossQuestion();else{const need=bossKey==='final'?4:2;if(bossCorrect>=need){if(!s.bosses.includes(bossKey))s.bosses.push(bossKey);let bonus=200+(s.items.includes('boots')&&bossKey!=='final'?50:0);s.xp+=bonus;alert('ボス撃破！ EXP +'+bonus);save();if(bossKey==='final')finish();else backMap();}else{alert('ボスに敗北… '+bossTotal+'問中'+need+'問以上正解で勝利！');backMap();}}}
+function backMap(){document.getElementById('battle').classList.add('hidden');document.getElementById('ending').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap();}
+function finish(){document.getElementById('battle').classList.add('hidden');document.getElementById('map').classList.add('hidden');document.getElementById('ending').classList.remove('hidden');const rate=s.attempts?Math.round(s.correct/s.attempts*100):0;document.getElementById('finalLevel').textContent='LEVEL '+level();document.getElementById('summary').textContent=CH[s.char].name+'｜正解率 '+rate+'%｜EXP '+s.xp;}
+function resetGame(){if(!confirm('冒険データをすべて消して最初から始めますか？'))return;localStorage.removeItem('sdgsCuteRPG');location.reload();}
+renderChars();if(s.char){document.getElementById('select').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap();}
+</script>
+</body>
+</html>

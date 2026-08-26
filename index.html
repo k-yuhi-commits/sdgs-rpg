@@ -170,6 +170,7 @@ function answer(i,b){if(answered)return;answered=true;s.attempts++;const all=[..
 function nextBattle(){
  if(mode==='stage'){if(!s.cleared.includes(curGoal))s.cleared.push(curGoal);const thresholds=[3,7,11,15],idx=thresholds.indexOf(s.cleared.length);if(idx>=0&&!s.items.includes(EQ[idx].id)){s.items.push(EQ[idx].id);if(s.char==='forest')s.xp+=50;alert('装備ゲット！ '+EQ[idx].name+'\n'+EQ[idx].effect);}save();backMap();}
  else{if(bossIndex<bossTotal)nextBossQuestion();else{const need=bossKey==='final'?4:2;if(bossCorrect>=need){if(!s.bosses.includes(bossKey))s.bosses.push(bossKey);let bonus=200+(s.items.includes('boots')&&bossKey!=='final'?50:0);s.xp+=bonus;alert('ボス撃破！ EXP +'+bonus);save();if(bossKey==='final')finish();else backMap();}else{alert('ボスに敗北… '+bossTotal+'問中'+need+'問以上正解で勝利！');backMap();}}}
+}
 function backMap(){document.getElementById('battle').classList.add('hidden');document.getElementById('ending').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap();}
 function finish(){document.getElementById('battle').classList.add('hidden');document.getElementById('map').classList.add('hidden');document.getElementById('ending').classList.remove('hidden');const rate=s.attempts?Math.round(s.correct/s.attempts*100):0;document.getElementById('finalLevel').textContent='LEVEL '+level();document.getElementById('summary').textContent=CH[s.char].name+'｜正解率 '+rate+'%｜EXP '+s.xp;}
 function resetGame(){if(!confirm('冒険データをすべて消して最初から始めますか？'))return;localStorage.removeItem('sdgsCuteRPG');location.reload();}

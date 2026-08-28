@@ -203,7 +203,8 @@ function evoStage(lv=level()){return lv>=10?2:lv>=5?1:0}
 function evoNode(){
  if(!s.char)return null;
  if(!s.branch||level()<5)return EVO[s.char].base;
- return level()>=10?EVO[s.char][s.branch].lv10:EVO[s.char][s.branch].lv5;
+ if(level()>=10)return EVO[s.char][s.branch].lv10;
+ return EVO[s.char][s.branch].lv5;
 }
 function ability(){
  if(!s.char||!s.branch||level()<5)return {expMul:1,hint:false,hpBonus:0,bossBonus:0,healEvery:0,combo:0};
@@ -217,11 +218,11 @@ function save(){localStorage.setItem('sdgsCuteRPGv4',JSON.stringify(s))}
 function mascotSVG(type,stage=0,monster=false){
  if(!monster&&EVO[type]){
    let art=EVO[type].base.art,name=EVO[type].base.name;
-   if(s.char===type&&s.branch&&level()>=5){
-     const node=level()>=10?EVO[type][s.branch].lv10:EVO[type][s.branch].lv5;
+   if(s.char===type){
+     const node=evoNode();
      art=node.art;name=node.name;
    }
-   return `<img class="charArt stage${stage}" src="${art}" alt="${name}">`;
+   return `<img class="charArt stage${evoStage()}" src="${art}" alt="${name}">`;
  }
  const color=stage>=2?'#65546d':stage>=1?'#8f78a1':'#9ddc73',outline='#4c3c30';
  return `<svg class="mascot" viewBox="0 0 120 120"><path d="M60 22 C38 22 22 40 24 67 C26 94 43 104 60 104 C80 104 96 91 97 67 C99 43 82 22 60 22Z" fill="${color}" stroke="${outline}" stroke-width="4"/><path d="M43 49 l11 5 M77 49 l-11 5" stroke="${outline}" stroke-width="4" stroke-linecap="round"/><path d="M50 68 Q60 60 70 68" fill="none" stroke="${outline}" stroke-width="4" stroke-linecap="round"/></svg>`;
@@ -273,7 +274,8 @@ function nextBossQuestion(){bossIndex++;answered=false;hintUsed=false;curQ=shuff
 
 function openBattle(label,name,isBoss,prog){
  document.getElementById('map').classList.add('hidden');document.getElementById('battle').classList.remove('hidden');document.getElementById('label').textContent=label;document.getElementById('progressText').textContent=prog;document.getElementById('question').textContent=curQ.q;document.getElementById('enemyName').textContent=name;document.getElementById('playerName').textContent=heroName();document.getElementById('battleHp').textContent='HP '+s.hp+' / '+maxhp();document.getElementById('hpbar').style.width=(Math.min(1,s.hp/maxhp())*100)+'%';
- document.getElementById('playerSvg').innerHTML=mascotSVG(s.char,evoStage());
+ document.getElementById('playerSvg').innerHTML=`<img class="charArt stage${evoStage()}" src="${heroArt()}" alt="${heroName()}">`;
+ document.getElementById('playerName').textContent=heroName();
  document.getElementById('enemySvg').innerHTML=mascotSVG('enemy',isBoss&&bossKey==='final'?2:isBoss?1:0,true);
  document.getElementById('bossBarWrap').classList.toggle('hidden',!isBoss);if(isBoss)document.getElementById('bossBar').style.width=(bossHP/bossTotal*100)+'%';
  document.getElementById('feedback').className='feedback';document.getElementById('nextBtn').classList.add('hidden');document.getElementById('hintBtn').classList.toggle('hidden',(!s.items.includes('book')&&!ability().hint)||hintUsed);document.getElementById('shieldBtn').classList.toggle('hidden',!s.items.includes('shield')||shieldArmed);
@@ -299,6 +301,8 @@ function showBranchChoice(){
 function chooseBranch(br){
  const old=EVO[s.char].base,node=EVO[s.char][br].lv5;
  s.branch=br;s.hp=maxhp();save();document.getElementById('branchOverlay').classList.add('hidden');
+ if(document.getElementById('playerSvg'))document.getElementById('playerSvg').innerHTML=`<img class="charArt stage1" src="${heroArt()}" alt="${heroName()}">`;
+ if(document.getElementById('playerName'))document.getElementById('playerName').textContent=heroName();
  document.getElementById('evoOld').innerHTML=`<img class="charArt" src="${old.art}">`;
  document.getElementById('evoNew').innerHTML=`<img class="charArt stage1" src="${node.art}">`;
  document.getElementById('evoMessage').textContent=`${old.name} は ${node.name} に進化した！`;
@@ -307,6 +311,8 @@ function chooseBranch(br){
 function showFinalEvolution(){
  const old=EVO[s.char][s.branch].lv5,node=EVO[s.char][s.branch].lv10;
  s.hp=maxhp();save();
+ if(document.getElementById('playerSvg'))document.getElementById('playerSvg').innerHTML=`<img class="charArt stage2" src="${heroArt()}" alt="${heroName()}">`;
+ if(document.getElementById('playerName'))document.getElementById('playerName').textContent=heroName();
  document.getElementById('evoOld').innerHTML=`<img class="charArt stage1" src="${old.art}">`;
  document.getElementById('evoNew').innerHTML=`<img class="charArt stage2" src="${node.art}">`;
  document.getElementById('evoMessage').textContent=`${old.name} は ${node.name} に最終進化した！`;

@@ -116,7 +116,7 @@
 <div id="inv" class="inv"></div>
 <h3>ワールドマップ</h3><div id="mapgrid" class="mapgrid"></div>
 <div id="goalstrip" class="goalstrip"></div>
-<div class="actions"><span class="small">通常クエストは5問連続！　Lv.5とLv.10でキャラクターが進化！</span><button class="sub" onclick="resetGame()">最初から</button></div>
+<div class="actions"><span class="small">通常クエストは5問連続！　Lv.5とLv.10でキャラクターが進化！</span><button class="sub" onclick="resetGame()">最初から</button><button class="sub" onclick="resetGame()">完全リセット</button></div>
 </section>
 
 <section id="battle" class="panel hidden">
@@ -350,7 +350,16 @@ function nextBattle(){
 
 function backMap(){document.getElementById('battle').classList.add('hidden');document.getElementById('ending').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap()}
 function finish(){document.getElementById('battle').classList.add('hidden');document.getElementById('map').classList.add('hidden');document.getElementById('ending').classList.remove('hidden');const rate=s.attempts?Math.round(s.correct/s.attempts*100):0;document.getElementById('finalHero').innerHTML=mascotSVG(s.char,evoStage());document.getElementById('finalName').textContent=heroName();document.getElementById('finalLevel').textContent='LEVEL '+level();document.getElementById('summary').textContent='正解率 '+rate+'%｜EXP '+s.xp}
-function resetGame(){if(!confirm('冒険データをすべて消して最初から始めますか？'))return;localStorage.removeItem('sdgsCuteRPGv3');location.reload()}
+function resetGame(){
+ if(!confirm('冒険データをすべて消して最初から始めますか？'))return;
+ localStorage.removeItem('sdgsCuteRPGv4');
+ localStorage.removeItem('sdgsCuteRPGv3');
+ localStorage.removeItem('sdgsCuteRPG');
+ localStorage.removeItem('sdgsLegendsV2');
+ localStorage.removeItem('sdgsLegends');
+ localStorage.removeItem('sdgsRPG');
+ location.reload();
+}
 
 renderSelect();
 if(s.char){document.getElementById('select').classList.add('hidden');document.getElementById('map').classList.remove('hidden');renderMap()}

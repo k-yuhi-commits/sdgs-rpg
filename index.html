@@ -199,16 +199,17 @@ if(s.streak===undefined)s.streak=0;
 let mode='stage',curGoal=null,curQ=null,answered=false,bossKey=null,bossTotal=0,bossIndex=0,bossCorrect=0,bossHP=0,shieldArmed=false,hintUsed=false,stageTotal=5,stageIndex=0,stageCorrect=0,stageSeen=[];
 
 function level(){return Math.floor(s.xp/350)+1}
-function evoStage(lv=level()){return lv>=10?2:lv>=5?1:0}
+function finalEvolutionReady(){return level()>=15&&s.cleared.length>=10}
+function evoStage(lv=level()){return finalEvolutionReady()?2:lv>=5?1:0}
 function evoNode(){
  if(!s.char)return null;
  if(!s.branch||level()<5)return EVO[s.char].base;
- if(level()>=10)return EVO[s.char][s.branch].lv10;
+ if(finalEvolutionReady())return EVO[s.char][s.branch].lv10;
  return EVO[s.char][s.branch].lv5;
 }
 function ability(){
  if(!s.char||!s.branch||level()<5)return {expMul:1,hint:false,hpBonus:0,bossBonus:0,healEvery:0,combo:0};
- return level()>=10?EVO[s.char][s.branch].lv10:EVO[s.char][s.branch].lv5;
+ return finalEvolutionReady()?EVO[s.char][s.branch].lv10:EVO[s.char][s.branch].lv5;
 }
 function maxhp(){return CH[s.char].maxhp+(ability().hpBonus||0)}
 function heroName(){return evoNode().name}
@@ -234,7 +235,11 @@ function choose(c){s={char:c,xp:0,cleared:[],bosses:[],items:[],hp:CH[c].maxhp,a
 function hud(){
  document.getElementById('heroName').textContent=heroName();document.getElementById('lv').textContent=level();document.getElementById('xp').textContent=s.xp;document.getElementById('hp').textContent=s.hp+'/'+maxhp();document.getElementById('clear').textContent=s.cleared.length+'/17';document.getElementById('xpbar').style.width=((s.xp%350)/3.5)+'%';
  document.getElementById('mapHero').innerHTML=mascotSVG(s.char,evoStage());document.getElementById('evoName').textContent=heroName();
- document.getElementById('evoNext').innerHTML=!s.branch&&level()<5?'Lv.5で「かわいい / かっこいい」に分岐進化！':s.branch&&level()<10?`選択ルート：<span class="routeBadge">${s.branch==='cute'?'🩷 かわいい系':'⚔️ かっこいい系'}</span>　Lv.10で最終進化！`:`最終進化：${heroName()}`;
+ document.getElementById('evoNext').innerHTML=
+ !s.branch&&level()<5?'Lv.5で「かわいい / かっこいい」に分岐進化！':
+ !s.branch?'分岐進化を選ぼう！':
+ finalEvolutionReady()?`最終進化：${heroName()}`:
+ `選択ルート：<span class="routeBadge">${s.branch==='cute'?'🩷 かわいい系':'⚔️ かっこいい系'}</span>　最終進化条件：Lv.15 ＋ SDGs 10ステージクリア（現在 Lv.${level()}・${s.cleared.length}/10）`;
  if(level()>=5&&!s.branch)setTimeout(showBranchChoice,120);
  document.getElementById('inv').innerHTML=s.items.length?s.items.map(id=>`<span class="item">${EQ.find(x=>x.id===id).name}</span>`).join(''):'<span class="small">装備：まだなし</span>';
 }
@@ -283,9 +288,11 @@ function openBattle(label,name,isBoss,prog){
 }
 
 function gainXP(amount){
- const before=level();s.xp+=Math.round(amount);const after=level();
+ const wasFinal=finalEvolutionReady(),before=level();
+ s.xp+=Math.round(amount);
+ const after=level();
  if(before<5&&after>=5&&!s.branch)setTimeout(showBranchChoice,100);
- if(before<10&&after>=10&&s.branch)setTimeout(showFinalEvolution,150);
+ if(!wasFinal&&finalEvolutionReady()&&s.branch)setTimeout(showFinalEvolution,150);
 }
 function showBranchChoice(){
  if(s.branch||!s.char)return;
@@ -309,6 +316,7 @@ function chooseBranch(br){
  document.getElementById('evolutionOverlay').classList.remove('hidden');
 }
 function showFinalEvolution(){
+ if(!finalEvolutionReady()||!s.branch)return;
  const old=EVO[s.char][s.branch].lv5,node=EVO[s.char][s.branch].lv10;
  s.hp=maxhp();save();
  if(document.getElementById('playerSvg'))document.getElementById('playerSvg').innerHTML=`<img class="charArt stage2" src="${heroArt()}" alt="${heroName()}">`;
@@ -340,7 +348,9 @@ function answer(i,b){
 function nextBattle(){
  if(mode==='stage'){
    if(stageIndex<stageTotal){nextStageQuestion();return;}
+   const wasFinalReady=finalEvolutionReady();
    if(!s.cleared.includes(curGoal))s.cleared.push(curGoal);
+   if(!wasFinalReady&&finalEvolutionReady()&&s.branch)setTimeout(showFinalEvolution,180);
    const thresholds=[3,7,11,15],idx=thresholds.indexOf(s.cleared.length);
    if(idx>=0&&!s.items.includes(EQ[idx].id)){s.items.push(EQ[idx].id);if(s.char==='forest')gainXP(s.branch==='cute'?100:50);alert('装備ゲット！ '+EQ[idx].name)}
    save();alert(`クエストクリア！ 5問中${stageCorrect}問正解！`);backMap()
